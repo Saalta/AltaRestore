@@ -73,7 +73,7 @@ function LoginScreen({ onLogin }) {
   };
 
   return (
-    <div style={{ maxWidth: 430, margin: "0 auto", minHeight: "100vh", background: T.bg, fontFamily: "'Plus Jakarta Sans', 'Segoe UI', sans-serif", display: "flex", flexDirection: "column" }}>
+    <div style={{ maxWidth: 1200, margin: "0 auto", minHeight: "100vh", background: T.bg, fontFamily: "'Plus Jakarta Sans', 'Segoe UI', sans-serif", display: "flex", flexDirection: "column" }}>
       <div style={{ background: T.primary, paddingTop: 72, paddingBottom: 48, paddingLeft: 28, paddingRight: 28, position: "relative", overflow: "hidden" }}>
         <div style={{ position: "absolute", top: -60, right: -60, width: 200, height: 200, borderRadius: "50%", background: "rgba(212,87,10,0.18)" }} />
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 40 }}>
@@ -146,7 +146,7 @@ function AddJobForm({ onClose, onSave }) {
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 100, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
-      <div style={{ background: T.bg, borderRadius: "20px 20px 0 0", width: "100%", maxWidth: 430, padding: "24px 20px 40px", maxHeight: "90vh", overflowY: "auto" }}>
+      <div style={{ background: T.bg, borderRadius: "20px 20px 0 0", width: "100%", maxWidth: 1200, padding: "24px 20px 40px", maxHeight: "90vh", overflowY: "auto" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
           <div style={{ fontSize: 18, fontWeight: 800, color: T.primary }}>New Job</div>
           <button onClick={onClose} style={{ background: T.surface, border: "none", borderRadius: 8, padding: "6px 10px", cursor: "pointer", fontSize: 13, color: T.secondary }}>Cancel</button>
@@ -210,7 +210,7 @@ function AddCrewForm({ onClose, onSave }) {
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 100, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
-      <div style={{ background: T.bg, borderRadius: "20px 20px 0 0", width: "100%", maxWidth: 430, padding: "24px 20px 40px" }}>
+      <div style={{ background: T.bg, borderRadius: "20px 20px 0 0", width: "100%", maxWidth: 1200, padding: "24px 20px 40px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
           <div style={{ fontSize: 18, fontWeight: 800, color: T.primary }}>Add Crew Member</div>
           <button onClick={onClose} style={{ background: T.surface, border: "none", borderRadius: 8, padding: "6px 10px", cursor: "pointer", fontSize: 13, color: T.secondary }}>Cancel</button>
@@ -569,7 +569,7 @@ export default function App() {
     setSelectedJob(null);
   };
 
-  const shell = { maxWidth: 430, margin: "0 auto", background: T.bg, minHeight: "100vh", fontFamily: "'Plus Jakarta Sans', 'Segoe UI', sans-serif", paddingBottom: 80 };
+  const shell = { maxWidth: 1200, margin: "0 auto", background: T.bg, minHeight: "100vh", fontFamily: "'Plus Jakarta Sans', 'Segoe UI', sans-serif", paddingBottom: 80 };
 
   const fonts = (
     <>
@@ -633,7 +633,7 @@ export default function App() {
         {screen === "docs" && <DocsScreen user={user} onSignOut={handleSignOut} />}
       </div>
 
-      <div style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 430, background: T.card, borderTop: `1px solid ${T.border}`, display: "flex", padding: "8px 0 12px" }}>
+      <div style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 1200, background: T.card, borderTop: `1px solid ${T.border}`, display: "flex", padding: "8px 0 12px" }}>
         {NAV.map(item => (
           <button key={item.id} onClick={() => setScreen(item.id)} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, background: "none", border: "none", cursor: "pointer", padding: "4px 0" }}>
             <div style={{ width: 32, height: 32, borderRadius: 10, background: screen === item.id ? T.primary : "transparent", display: "flex", alignItems: "center", justifyContent: "center" }}>
