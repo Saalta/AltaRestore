@@ -279,8 +279,89 @@ function Dashboard({ jobs, onJobClick, onAddJob }) {
 // ─── Job Detail ───────────────────────────────────────────────────────────────
 function JobDetail({ job, onBack }) {
   const [tab, setTab] = useState("overview");
+  const [photos, setPhotos] = useState([]);
+  const [uploading, setUploading] = useState(false);
   const p = PRIORITY_COLORS[job.priority] || PRIORITY_COLORS.medium;
   const s = STATUS_COLOR[job.status] || STATUS_COLOR.active;
+
+  const loadPhotos = async () => {
+    const { data } = await supabase.storage.from("job-photos").list(job.id);
+    if (data) {
+      const urls = data.map(f => ({
+        name: f.name,
+        url: supabase.storage.from("job-photos").getPublicUrl(`${job.id}/${f.name}`).data.publicUrl,
+      }));
+      setPhotos(urls);
+    }
+  };
+
+  useEffect(() => { if (tab === "photos") loadPhotos(); }, [tab]);
+
+  const handlePhotoUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+    setUploading(true);
+    for (const file of files) {
+      const path = `${job.id}/${Date.now()}-${file.name}`;
+      await supabase.storage.from("job-photos").upload(path, file);
+    }
+    await loadPhotos();
+    setUploading(false);
+  };
+
+  const handlePrint = () => {
+    const win = window.open("", "_blank");
+    win.document.write(`
+      <html><head><title>Job Report — ${job.client}</title>
+      <style>
+        body { font-family: 'Segoe UI', sans-serif; padding: 48px; color: #1C1A17; max-width: 800px; margin: 0 auto; }
+        h1 { font-size: 28px; font-weight: 800; margin-bottom: 4px; }
+        .meta { color: #9B9690; font-size: 13px; margin-bottom: 32px; }
+        .section { margin-bottom: 28px; }
+        .section-title { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #9B9690; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #E0DDD8; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .field { background: #F4F2EF; border-radius: 8px; padding: 14px 16px; }
+        .field-label { font-size: 11px; color: #9B9690; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
+        .field-val { font-size: 16px; font-weight: 700; text-transform: capitalize; }
+        .badge { display: inline-block; padding: 3px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; text-transform: capitalize; }
+        .header-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+        .logo { font-size: 18px; font-weight: 800; color: #D4570A; }
+        .divider { border: none; border-top: 2px solid #1C1A17; margin: 0 0 28px; }
+        @media print { body { padding: 24px; } }
+      </style></head><body>
+      <div class="header-row">
+        <div class="logo">AltaRestore</div>
+        <div style="font-size:12px;color:#9B9690;">Generated ${new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</div>
+      </div>
+      <hr class="divider"/>
+      <div class="section">
+        <div class="section-title">Job Information</div>
+        <h1>${job.client}</h1>
+        <div class="meta">${job.id} &nbsp;·&nbsp; ${job.type} &nbsp;·&nbsp; ${job.address}</div>
+        <div class="grid">
+          <div class="field"><div class="field-label">Status</div><div class="field-val">${job.status.replace("-", " ")}</div></div>
+          <div class="field"><div class="field-label">Priority</div><div class="field-val">${job.priority}</div></div>
+          <div class="field"><div class="field-label">Phase</div><div class="field-val">${job.phase}</div></div>
+          <div class="field"><div class="field-label">Start Date</div><div class="field-val">${job.started}</div></div>
+        </div>
+      </div>
+      ${job.moisture ? `
+      <div class="section">
+        <div class="section-title">Moisture Reading</div>
+        <div class="field"><div class="field-label">Current Reading</div><div class="field-val">${job.moisture}% &nbsp;(Target: ≤12%)</div></div>
+      </div>` : ""}
+      <div class="section">
+        <div class="section-title">Notes</div>
+        <div style="border:1px solid #E0DDD8;border-radius:8px;padding:20px 16px;min-height:80px;color:#9B9690;font-size:14px;">No notes recorded.</div>
+      </div>
+      <div style="margin-top:60px;padding-top:20px;border-top:1px solid #E0DDD8;display:flex;justify-content:space-between;font-size:12px;color:#9B9690;">
+        <div>AltaRestore Field Report</div><div>${job.id}</div>
+      </div>
+      </body></html>
+    `);
+    win.document.close();
+    win.print();
+  };
 
   return (
     <div>
@@ -297,9 +378,14 @@ function JobDetail({ job, onBack }) {
             <i className="ti ti-map-pin" style={{ fontSize: 15, color: T.muted }} />{job.address}
           </div>
         </div>
-        <div style={{ display: "flex", gap: 10 }}>
-          <Badge text={job.status.replace("-", " ")} bg={s.bg} color={s.text} />
-          <Badge text={`${job.priority} priority`} bg={p.bg} color={p.text} />
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 12 }}>
+          <div style={{ display: "flex", gap: 10 }}>
+            <Badge text={job.status.replace("-", " ")} bg={s.bg} color={s.text} />
+            <Badge text={`${job.priority} priority`} bg={p.bg} color={p.text} />
+          </div>
+          <button onClick={handlePrint} style={{ display: "flex", alignItems: "center", gap: 8, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, padding: "8px 16px", fontSize: 13, fontWeight: 700, color: T.primary, cursor: "pointer" }}>
+            <i className="ti ti-printer" style={{ fontSize: 15 }} /> Print Report
+          </button>
         </div>
       </div>
 
@@ -326,10 +412,39 @@ function JobDetail({ job, onBack }) {
           ))}
         </div>
       )}
-      {(tab === "drybook" || tab === "docs" || tab === "photos") && (
+
+      {(tab === "drybook" || tab === "docs") && (
         <div style={{ background: T.card, borderRadius: 14, border: `1px solid ${T.border}`, padding: "60px 20px", textAlign: "center", color: T.muted }}>
-          <i className={`ti ${tab === "drybook" ? "ti-droplet" : tab === "docs" ? "ti-file-text" : "ti-camera"}`} style={{ fontSize: 48, marginBottom: 16, display: "block" }} />
+          <i className={`ti ${tab === "drybook" ? "ti-droplet" : "ti-file-text"}`} style={{ fontSize: 48, marginBottom: 16, display: "block" }} />
           <div style={{ fontSize: 16, fontWeight: 600 }}>No {tab} data yet</div>
+        </div>
+      )}
+
+      {tab === "photos" && (
+        <div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: T.primary }}>{photos.length} photo{photos.length !== 1 ? "s" : ""}</div>
+            <label style={{ display: "flex", alignItems: "center", gap: 8, background: T.primary, color: "#fff", border: "none", borderRadius: 10, padding: "10px 20px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
+              <i className="ti ti-camera-plus" style={{ fontSize: 16 }} />
+              {uploading ? "Uploading…" : "Upload Photos"}
+              <input type="file" accept="image/*" multiple onChange={handlePhotoUpload} style={{ display: "none" }} />
+            </label>
+          </div>
+          {photos.length === 0 ? (
+            <div style={{ background: T.card, borderRadius: 14, border: `2px dashed ${T.border}`, padding: "60px 20px", textAlign: "center", color: T.muted }}>
+              <i className="ti ti-camera" style={{ fontSize: 48, marginBottom: 16, display: "block" }} />
+              <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>No photos yet</div>
+              <div style={{ fontSize: 13 }}>Click "Upload Photos" to add images</div>
+            </div>
+          ) : (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 12 }}>
+              {photos.map(photo => (
+                <div key={photo.name} style={{ borderRadius: 12, overflow: "hidden", aspectRatio: "1", border: `1px solid ${T.border}` }}>
+                  <img src={photo.url} alt={photo.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
